@@ -16,11 +16,7 @@ const {instance: { exports }} = await WebAssembly.instantiateStreaming(fetch('ex
   // your imports here
 })
 
-wasi_snapshot_preview1.setInstance(exports)
-
-if (exports._start) {
-  exports._start()
-}
+wasi_snapshot_preview1.start(exports)
 ```
 
 To really unlock it's power, though, give it an `fs` instance, like from [zen-fs](https://github.com/zen-fs/core). Here is an example that will mount a zip file to /zip, in-memory storage to /tmp, and IndexedDB to /home. Note that / has the default in-memory backend.
@@ -49,11 +45,7 @@ const {instance: { exports }} = await WebAssembly.instantiateStreaming(fetch('ex
   // your imports here
 })
 
-wasi_snapshot_preview1.setInstance(exports)
-
-if (exports._start) {
-  exports._start()
-}
+wasi_snapshot_preview1.start(exports)
 ```
 
 Have a look in [example](docs) to see how I fit it all together.
@@ -63,4 +55,4 @@ Have a look in [example](docs) to see how I fit it all together.
 
 - [this article](https://dev.to/ndesmic/building-a-minimal-wasi-polyfill-for-browsers-4nel) has some nice initial ideas
 - [this article](https://twdev.blog/2023/11/wasm_cpp_04/) has some good WASI imeplentations
-- [browser-wasi-shim](https://github.com/bjorn3/browser_wasi_shim) is a classic set of examples
+- [browser-wasi-shim](https://github.com/bjorn3/browser_wasi_shim) has a very nice interface, and this is basically the same, but using more extensible fs.
