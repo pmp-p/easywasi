@@ -2,11 +2,11 @@ import * as defs from './defs.js'
 
 class WASIProcExit extends Error {}
 
+// debug function for stubs: get current function-name
 function getFunctionsNameThatCalledThisFunction () {
   const e = new Error('dummy')
   const stack = e.stack
     .split('\n')[2]
-  // " at functionName ( ..." => "functionName"
     .replace(/^\s+at\s+(.+?)\s.+/g, '$1')
   return stack
 }
@@ -157,8 +157,6 @@ export class WasiPreview1 {
     let resolutionValue
     switch (id) {
       case defs.CLOCKID_MONOTONIC: {
-        // https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
-        // > Resolution in isolated contexts: 5 microseconds
         resolutionValue = 5_000n // 5 microseconds
         break
       }
@@ -175,9 +173,10 @@ export class WasiPreview1 {
 
   clock_time_get (id, precision, time) {
     if (id === defs.CLOCKID_REALTIME) {
+      const d = new Date()
       this.view.setBigUint64(
         time,
-        BigInt(new Date().getTime()) * 1_000_000n,
+        BigInt(d.getTime() - (d.getTimezoneOffset() * 60_000)) * 1_000_000n,
         true
       )
     } else if (id === defs.CLOCKID_MONOTONIC) {
@@ -189,7 +188,6 @@ export class WasiPreview1 {
       }
       this.view.setBigUint64(time, monotonicTime, true)
     } else {
-      // TODO
       this.view.setBigUint64(time, 0n, true)
     }
     return 0
