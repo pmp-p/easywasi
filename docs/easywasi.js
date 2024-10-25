@@ -208,62 +208,77 @@ export class WasiPreview1 {
 
   fd_datasync () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_fdstat_set_flags () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_fdstat_set_rights () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_filestat_get () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_filestat_set_size () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_filestat_set_times () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_pread () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
-  fd_prestat_get () {
+  fd_prestat_get (fd, bufP) {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_prestat_dir_name () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_pwrite () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_read (fd, iovs) {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_readdir () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_renumber () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_sync () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_tell () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   fd_close () {
@@ -309,38 +324,47 @@ export class WasiPreview1 {
 
   path_filestat_set_times () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   path_link () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   path_open () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   path_readlink () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   path_remove_directory () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   path_rename () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   path_symlink () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   path_unlink_file () {
     console.log(getFunctionsNameThatCalledThisFunction(), arguments)
+    return defs.ERRNO_BADF
   }
 
   poll_oneoff (in_, out, nsubscriptions) {
-    throw new Error('async io not supported')
+    // throw new Error('async io not supported')
+    return defs.ERRNO_NOSYS
   }
 
   proc_exit (exitCode) {
@@ -359,19 +383,23 @@ export class WasiPreview1 {
   }
 
   sock_accept (fd, flags) {
-    throw new Error('Network sockets not supported')
+    // throw new Error('Network sockets not supported')
+    return defs.ERRNO_NOSYS
   }
 
   sock_recv (fd, riData, riFlags) {
-    throw new Error('Network sockets not supported')
+    // throw new Error('Network sockets not supported')
+    return defs.ERRNO_NOSYS
   }
 
   sock_send (fd, siData, riFlags) {
-    throw new Error('Network sockets not supported')
+    // throw new Error('Network sockets not supported')
+    return defs.ERRNO_NOSYS
   }
 
   sock_shutdown (fd, how) {
-    throw new Error('Network sockets not supported')
+    // throw new Error('Network sockets not supported')
+    return defs.ERRNO_NOSYS
   }
 
   fd_write (fd, iovsPtr, iovsLength, bytesWrittenPtr) {

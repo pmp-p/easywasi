@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
   fflush(stdout);
 
   // I can read files from zip
-  // print_file("/mnt/zip/cyber.txt");
+  print_file("/mnt/zip/cyber.txt");
 
   return 0;
 }
