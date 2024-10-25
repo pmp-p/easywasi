@@ -74,7 +74,9 @@ export class WasiPreview1 {
   start (wasm) {
     this.setup(wasm)
     try {
-      this.wasm._start()
+      if (wasm._start) {
+        wasm._start()
+      }
       return 0
     } catch (e) {
       if (e instanceof WASIProcExit) {
