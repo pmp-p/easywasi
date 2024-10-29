@@ -57,8 +57,7 @@ Have a look in [example](docs) to see how I fit it all together.
 Keep in mind, you can eaasily override every function yourself, too, like if you want to implement the socket-API, which is the only thing I left out:
 
 ```js
-import WasiPreview1 from 'easywasi'
-import defs from 'easywasi/defs'
+import {defs, WasiPreview1} from 'easywasi'
 
 class WasiPreview1WithSockets = {
   constructor(options={}) {

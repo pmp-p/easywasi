@@ -1,6 +1,8 @@
 import * as defs from "./defs.js";
 
-class WASIProcExit extends Error {
+export { defs };
+
+export class WASIProcExit extends Error {
   constructor(code) {
     super(`Exit with code ${code}`);
     this.code = code;
@@ -1195,3 +1197,4 @@ export class WasiPreview1 {
     return defs.ERRNO_NOSYS;
   }
 }
+export default WasiPreview1;
