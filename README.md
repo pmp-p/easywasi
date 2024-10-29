@@ -32,10 +32,9 @@ import { configure, InMemory } from '@zenfs/core'
 import { IndexedDB } from '@zenfs/dom'
 import { Zip } from '@zenfs/zip'
 
-const res = await fetch('mydata.zip')
 await configure({
   mounts: {
-    '/zip': { backend: Zip, data: await res.arrayBuffer() },
+    '/zip': { backend: Zip, data: await await fetch('mydata.zip').then(r => r.arrayBuffer()) },
     '/tmp': InMemory,
     '/home': IndexedDB
   }
