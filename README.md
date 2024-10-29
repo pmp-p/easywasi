@@ -19,7 +19,12 @@ const {instance: { exports }} = await WebAssembly.instantiateStreaming(fetch('ex
 wasi_snapshot_preview1.start(exports)
 ```
 
-To really unlock it's power, though, give it an `fs` instance, like from [zen-fs](https://github.com/zen-fs/core). Here is an example that will mount a zip file to /zip, in-memory storage to /tmp, and IndexedDB to /home. Note that / has the default in-memory backend.
+To really unlock it's power, though, give it an `fs` instance, like from [zen-fs](https://github.com/zen-fs/core). Here is an example that will mount a zip file to `/zip`, in-memory storage to `/tmp`, and IndexedDB to `/home`.
+
+Things to note:
+
+- `/` has the default in-memory backend.
+- `/mnt` is a bit special, and not traversed by file-lists, so if you want that, put it somewhere else
 
 ```js
 import WasiPreview1 from 'easywasi'
@@ -30,13 +35,13 @@ import { Zip } from '@zenfs/zip'
 const res = await fetch('mydata.zip')
 await configure({
   mounts: {
-    '/mnt/zip': { backend: Zip, data: await res.arrayBuffer() },
+    '/zip': { backend: Zip, data: await res.arrayBuffer() },
     '/tmp': InMemory,
     '/home': IndexedDB
   }
 })
 
-// here, you could use fs.writeFileSync any files you want, as well
+// here, you could use fs to modify filesystem however you need (write files, make directories, etc)
 
 const wasi_snapshot_preview1 = new WasiPreview1({fs})
 
@@ -50,9 +55,47 @@ wasi_snapshot_preview1.start(exports)
 
 Have a look in [example](docs) to see how I fit it all together.
 
+Keep in mind, you can eaasily override every function yourself, too, like if you want to implement the socket-API, which is the only thing I left out:
+
+```js
+import WasiPreview1 from 'easywasi'
+import defs from 'easywasi/defs'
+
+class WasiPreview1WithSockets = {
+  constructor(options={}) {
+    super(options)
+    // do somehting with optiosn to setup socket
+  }
+
+  // obviously implement these however
+  sock_accept (fd, flags) {
+    return defs.ERRNO_NOSYS
+  }
+  sock_recv (fd, riData, riFlags) {
+    return defs.ERRNO_NOSYS
+  }
+  sock_send (fd, siData, riFlags) {
+    return defs.ERRNO_NOSYS
+  }
+  sock_shutdown (fd, how) {
+    return defs.ERRNO_NOSYS
+  }
+}
+
+// usage
+const wasi_snapshot_preview1 = new WasiPreview1WithSockets({fs})
+
+const {instance: { exports }} = await WebAssembly.instantiateStreaming(fetch('example.wasm'), {
+  wasi_snapshot_preview1
+})
+wasi_snapshot_preview1.start(exports)
+```
+
+Have a look at [WasiPreview1](./docs/easywasi.js) to figure out how to implement it, if you want things to work differently.
+
 
 ## inspiration
 
 - [this article](https://dev.to/ndesmic/building-a-minimal-wasi-polyfill-for-browsers-4nel) has some nice initial ideas
 - [this article](https://twdev.blog/2023/11/wasm_cpp_04/) has some good WASI imeplentations
-- [browser-wasi-shim](https://github.com/bjorn3/browser_wasi_shim) has a very nice interface, and this is basically the same, but using more extensible fs.
+- [browser-wasi-shim](https://github.com/bjorn3/browser_wasi_shim) has a very nice interface, and this is basically the same, but using more extensible fs, and improving a few little things.

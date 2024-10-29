@@ -2,13 +2,23 @@
   "name": "easywasi",
   "version": "0.0.0",
   "description": "A working browser-shim for WASI preview1, with lots of filesystem options",
-  "main": "docs/easywasi.js",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./docs/easywasi.js"
+    },
+    "defs": {
+      "import": "./docs/defs.js"
+    }
+  },
   "scripts": {
-    "test": "npx -y vitest -- run --globals",
     "start": "npx -y live-server docs"
   },
-  "keywords": ["WASI", "WASM", "browser"],
+  "keywords": [
+    "WASI",
+    "WASM",
+    "browser"
+  ],
   "author": "David Konsumer <konsumer@jetboystudio.com>",
   "license": "MIT"
 }
