@@ -2,6 +2,38 @@
 
 A working, zero-dependency browser-shim (and general js engine) for WASI preview1, with lots of filesystem options. It will work in places other than a browser, but that is the primary target. It's easy, light, simple, easy to modify, and should work with any WASI-enabled wasm.
 
+## install
+
+Install into your bundled project with `npm i easywasi`. You can also use it on the web, directly from cdn:
+
+```html
+<script type="module">
+import WasiPreview1 from 'https://esm.sh/easywasi@0.0.2'
+</script>
+```
+
+And I like to use sourcemaps:
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "easywasi": "https://esm.sh/easywasi@0.0.2",
+      "@zenfs/core": "https://esm.sh/@zenfs/core",
+      "@zenfs/dom": "https://esm.sh/@zenfs/dom",
+      "@zenfs/zip": "https://esm.sh/@zenfs/zip"
+    }
+  }
+</script>
+<script type="module">
+import { WasiPreview1 } from 'easywasi'
+import { configure, InMemory, fs } from '@zenfs/core'
+import { IndexedDB } from '@zenfs/dom'
+import { Zip } from '@zenfs/zip'
+
+</script>
+```
+
+
 ## usage
 
 You can use it without a filesystem, like this:
