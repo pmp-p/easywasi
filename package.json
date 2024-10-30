@@ -19,6 +19,7 @@
     "WASM",
     "browser"
   ],
+  "homepage": "https://konsumer.js.org/easywasi",
   "author": "David Konsumer <konsumer@jetboystudio.com>",
   "license": "MIT"
 }
