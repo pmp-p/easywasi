@@ -3,7 +3,7 @@ import * as defs from './defs.js'
 export { defs }
 
 export class WASIProcExit extends Error {
-  constructor(code) {
+  constructor (code) {
     super(`Exit with code ${code}`)
     this.code = code
   }
@@ -12,7 +12,7 @@ export class WASIProcExit extends Error {
 export class FSDummy {}
 
 export class WasiPreview1 {
-  constructor(options = {}) {
+  constructor (options = {}) {
     this.args = options.args || []
     this.env = options.env || {}
     this.fs = options.fs || new FSDummy()
@@ -83,13 +83,13 @@ export class WasiPreview1 {
   // Helper methods
 
   // this binds the wasm to this WASI implementation
-  setup(wasm) {
+  setup (wasm) {
     this.wasm = wasm
   }
 
   // this binds the wasm to this WASI implementation
   // and calls it's main()'
-  start(wasm) {
+  start (wasm) {
     this.setup(wasm)
     try {
       if (wasm._start) {
@@ -104,7 +104,7 @@ export class WasiPreview1 {
     }
   }
 
-  allocateFd(fileHandle, type = 'file') {
+  allocateFd (fileHandle, type = 'file') {
     const fd = this.nextFd++
     const descriptor = { type, handle: fileHandle, fd }
     this.fds.set(fd, descriptor)
@@ -112,19 +112,19 @@ export class WasiPreview1 {
   }
 
   // Standard output handling (for fdwrite)
-  stdout(buffer) {
+  stdout (buffer) {
     const text = this.textDecoder.decode(buffer).replace(/\n$/g, '')
     if (text) console.log(text)
   }
 
   // Standard error handling (for fdwrite)
-  stderr(buffer) {
+  stderr (buffer) {
     const text = this.textDecoder.decode(buffer).replace(/\n$/g, '')
     if (text) console.error(text)
   }
 
   // Args functions
-  args_get(argvP, argvBufP) {
+  args_get (argvP, argvBufP) {
     const view = new DataView(this.wasm.memory.buffer)
     const mem = new Uint8Array(this.wasm.memory.buffer)
 
@@ -139,7 +139,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  args_sizes_get(argcPtr, argvBufSizePtr) {
+  args_sizes_get (argcPtr, argvBufSizePtr) {
     const view = new DataView(this.wasm.memory.buffer)
     view.setUint32(argcPtr, this.args.length, true)
     const bufSize = this.args.reduce((acc, arg) => acc + arg.length + 1, 0)
@@ -148,7 +148,7 @@ export class WasiPreview1 {
   }
 
   // Environment functions
-  environ_get(environP, environBufP) {
+  environ_get (environP, environBufP) {
     const view = new DataView(this.wasm.memory.buffer)
     const mem = new Uint8Array(this.wasm.memory.buffer)
 
@@ -163,7 +163,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  environ_sizes_get(environCountPtr, environBufSizePtr) {
+  environ_sizes_get (environCountPtr, environBufSizePtr) {
     const view = new DataView(this.wasm.memory.buffer)
     const count = Object.keys(this.env).length
     view.setUint32(environCountPtr, count, true)
@@ -173,7 +173,7 @@ export class WasiPreview1 {
   }
 
   // Clock functions
-  clock_res_get(id, resPtr) {
+  clock_res_get (id, resPtr) {
     const view = new DataView(this.wasm.memory.buffer)
     let resolution
     switch (id) {
@@ -190,7 +190,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  clock_time_get(id, precision, timePtr) {
+  clock_time_get (id, precision, timePtr) {
     const view = new DataView(this.wasm.memory.buffer)
     let time
     switch (id) {
@@ -211,14 +211,14 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  fd_close(fd) {
+  fd_close (fd) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     this.fds.delete(fd)
     return defs.ERRNO_SUCCESS
   }
 
-  fd_seek(fd, offset, whence, newOffsetPtr) {
+  fd_seek (fd, offset, whence, newOffsetPtr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type === 'stdio') return defs.ERRNO_SPIPE
@@ -253,7 +253,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_write(fd, iovs, iovsLen, nwrittenPtr) {
+  fd_write (fd, iovs, iovsLen, nwrittenPtr) {
     let written = 0
     const chunks = []
     const view = new DataView(this.wasm.memory.buffer)
@@ -302,7 +302,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  fd_read(fd, iovs, iovsLen, nreadPtr) {
+  fd_read (fd, iovs, iovsLen, nreadPtr) {
     if (fd === 0) return defs.ERRNO_SPIPE // stdin not implemented
 
     const fileDesc = this.fds.get(fd)
@@ -340,7 +340,7 @@ export class WasiPreview1 {
     }
   }
 
-  path_open(dirfd, dirflags, path, pathLen, oflags, fsRightsBase, fsRightsInheriting, fdflags, fdPtr) {
+  path_open (dirfd, dirflags, path, pathLen, oflags, fsRightsBase, fsRightsInheriting, fdflags, fdPtr) {
     const fileDesc = this.fds.get(dirfd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -372,11 +372,11 @@ export class WasiPreview1 {
     }
   }
 
-  proc_exit(code) {
+  proc_exit (code) {
     throw new WASIProcExit(code)
   }
 
-  fd_fdstat_get(fd, statPtr) {
+  fd_fdstat_get (fd, statPtr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -423,7 +423,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  fd_fdstat_set_flags(fd, flags) {
+  fd_fdstat_set_flags (fd, flags) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -455,7 +455,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_prestat_get(fd, prestatPtr) {
+  fd_prestat_get (fd, prestatPtr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -487,7 +487,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  fd_prestat_dir_name(fd, pathPtr, pathLen) {
+  fd_prestat_dir_name (fd, pathPtr, pathLen) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -514,7 +514,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  path_filestat_get(fd, flags, pathPtr, pathLen, filestatPtr) {
+  path_filestat_get (fd, flags, pathPtr, pathLen, filestatPtr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -594,7 +594,7 @@ export class WasiPreview1 {
   }
 
   // File/Directory Operations
-  fd_advise(fd, offset, len, advice) {
+  fd_advise (fd, offset, len, advice) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -604,7 +604,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  fd_allocate(fd, offset, len) {
+  fd_allocate (fd, offset, len) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -624,7 +624,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_datasync(fd) {
+  fd_datasync (fd) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -641,7 +641,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_filestat_set_size(fd, size) {
+  fd_filestat_set_size (fd, size) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -654,7 +654,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_filestat_set_times(fd, atim, mtim, fst_flags) {
+  fd_filestat_set_times (fd, atim, mtim, fst_flags) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -672,7 +672,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_pread(fd, iovs, iovsLen, offset, nreadPtr) {
+  fd_pread (fd, iovs, iovsLen, offset, nreadPtr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -709,7 +709,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_pwrite(fd, iovs, iovsLen, offset, nwrittenPtr) {
+  fd_pwrite (fd, iovs, iovsLen, offset, nwrittenPtr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -759,7 +759,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_readdir(fd, buf, bufLen, cookie, bufusedPtr) {
+  fd_readdir (fd, buf, bufLen, cookie, bufusedPtr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'directory') return defs.ERRNO_NOTDIR
@@ -814,7 +814,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_renumber(from, to) {
+  fd_renumber (from, to) {
     const fromDesc = this.fds.get(from)
     if (!fromDesc) return defs.ERRNO_BADF
 
@@ -828,7 +828,7 @@ export class WasiPreview1 {
     return defs.ERRNO_SUCCESS
   }
 
-  fd_sync(fd) {
+  fd_sync (fd) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -844,7 +844,7 @@ export class WasiPreview1 {
     }
   }
 
-  fd_tell(fd, offsetPtr) {
+  fd_tell (fd, offsetPtr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type !== 'file') return defs.ERRNO_BADF
@@ -855,7 +855,7 @@ export class WasiPreview1 {
   }
 
   // Path Operations
-  path_create_directory(fd, path, pathLen) {
+  path_create_directory (fd, path, pathLen) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -877,7 +877,7 @@ export class WasiPreview1 {
     }
   }
 
-  path_filestat_set_times(fd, flags, path, pathLen, atim, mtim, fst_flags) {
+  path_filestat_set_times (fd, flags, path, pathLen, atim, mtim, fst_flags) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -904,7 +904,7 @@ export class WasiPreview1 {
     }
   }
 
-  path_link(old_fd, old_flags, old_path, old_path_len, new_fd, new_path, new_path_len) {
+  path_link (old_fd, old_flags, old_path, old_path_len, new_fd, new_path, new_path_len) {
     const oldFileDesc = this.fds.get(old_fd)
     const newFileDesc = this.fds.get(new_fd)
     if (!oldFileDesc || !newFileDesc) return defs.ERRNO_BADF
@@ -937,7 +937,7 @@ export class WasiPreview1 {
     }
   }
 
-  path_readlink(fd, path, path_len, buf, buf_len, bufused) {
+  path_readlink (fd, path, path_len, buf, buf_len, bufused) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -971,7 +971,7 @@ export class WasiPreview1 {
     }
   }
 
-  path_remove_directory(fd, path, path_len) {
+  path_remove_directory (fd, path, path_len) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -993,7 +993,7 @@ export class WasiPreview1 {
     }
   }
 
-  path_rename(old_fd, old_path, old_path_len, new_fd, new_path, new_path_len) {
+  path_rename (old_fd, old_path, old_path_len, new_fd, new_path, new_path_len) {
     const oldFileDesc = this.fds.get(old_fd)
     const newFileDesc = this.fds.get(new_fd)
     if (!oldFileDesc || !newFileDesc) return defs.ERRNO_BADF
@@ -1026,7 +1026,7 @@ export class WasiPreview1 {
     }
   }
 
-  path_symlink(old_path, old_path_len, fd, new_path, new_path_len) {
+  path_symlink (old_path, old_path_len, fd, new_path, new_path_len) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -1049,7 +1049,7 @@ export class WasiPreview1 {
     }
   }
 
-  path_unlink_file(fd, path, path_len) {
+  path_unlink_file (fd, path, path_len) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -1072,7 +1072,7 @@ export class WasiPreview1 {
   }
 
   // Poll Operations
-  poll_oneoff(in_, out, nsubscriptions, nevents) {
+  poll_oneoff (in_, out, nsubscriptions, nevents) {
     // Basic implementation that just processes all subscriptions immediately
     const view = new DataView(this.wasm.memory.buffer)
     let numEvents = 0
@@ -1097,29 +1097,32 @@ export class WasiPreview1 {
   }
 
   // Random Number Generation
-  random_get(buf, buf_len) {
+  random_get (buf, buf_len) {
     const bytes = new Uint8Array(this.wasm.memory.buffer, buf, buf_len)
     crypto.getRandomValues(bytes)
     return defs.ERRNO_SUCCESS
   }
 
   // Scheduling Operations
-  sched_yield() {
+  sched_yield () {
     // Can't really yield in JavaScript, just return success
     return defs.ERRNO_SUCCESS
   }
 
   // STUB
-  sock_accept(fd, flags) {
+  sock_accept (fd, flags) {
     return defs.ERRNO_NOSYS
   }
-  sock_recv(fd, riData, riFlags) {
+
+  sock_recv (fd, riData, riFlags) {
     return defs.ERRNO_NOSYS
   }
-  sock_send(fd, siData, riFlags) {
+
+  sock_send (fd, siData, riFlags) {
     return defs.ERRNO_NOSYS
   }
-  sock_shutdown(fd, how) {
+
+  sock_shutdown (fd, how) {
     return defs.ERRNO_NOSYS
   }
 }

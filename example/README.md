@@ -7,5 +7,3 @@ You don't need to do this (it's already build in `docs/`) but here is how you bu
 ```
 make
 ```
-
-All the `fflush(stdout);` calls are to defeat printf-buffering, which can be out-of-order, otherwise.

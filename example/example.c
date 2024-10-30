@@ -14,7 +14,7 @@ rand_type my_rand() {
 }
 
 int print_file(char* filename) {
-  FILE *file_ptr;
+  FILE* file_ptr;
   char ch;
   file_ptr = fopen(filename, "r");
   if (NULL == file_ptr) {
@@ -22,7 +22,6 @@ int print_file(char* filename) {
     return 1;
   }
   printf("CONTENTS OF %s:\n", filename);
-  fflush(stdout);
   while ((ch = fgetc(file_ptr)) != EOF) {
     printf("%c", ch);
   }
@@ -31,44 +30,50 @@ int print_file(char* filename) {
 }
 
 int main(int argc, char *argv[]) {
-  printf("hello. argv works: %d\n", argc);
+  printf("hello. stdout works.\n");
+
+  fprintf(stderr, "stderr works.\n");
+
+  printf("\nargv works: %d\n", argc);
   for (int i=0;i<argc;i++) {
     printf("  %d: %s\n", i, argv[i]);
   }
-  fflush(stdout);
 
-  printf("env works:\n");
+  printf("\nenv works:\n");
   const char* COOL = getenv("COOL");
   printf("  COOL=%s\n", COOL);
-  fflush(stdout);
-
-  printf("stdout works.\n");
-  fflush(stdout);
-  fprintf(stderr, "stderr works.\n");
-  fflush(stderr);
 
   time_t rawtime;
   struct tm *info;
   time(&rawtime);
   info = localtime(&rawtime);
-  printf("time works: %s", asctime(info));
-  fflush(stdout);
+  printf("\ntime works: %s", asctime(info));
 
   srand(time(NULL));
-  printf("random works: %hhu\n", my_rand());
-  fflush(stdout);
+  printf("\nrandom works: %hhu\n", my_rand());
 
-  printf ("I can read files from zip:\n");
-  fflush(stdout);
   char* filename = "/zip/cyber.txt";
   if (access(filename, F_OK) == 0) {
-    printf("file exists: %s\n", filename);
+    printf("\ncyber textfile exists: %s\n\n", filename);
     print_file(filename);
-    fflush(stdout);
-    return 1;
+    printf("\n\n");
   } else {
-    fprintf(stderr, "file does not exist: %s\n", filename);
-    fflush(stderr);
+    fprintf(stderr, "cyber textfile does not exist: %s\n", filename);
+    return 1;
+  }
+
+  filename = "/home/counter";
+  if (access(filename, F_OK) == 0) {
+    FILE* fin = fopen(filename, "rb");
+    unsigned char counter = fgetc(fin);
+    printf("counter file (%s) exists and was tested %u times.\n", filename, counter);
+    fclose(fin);
+    FILE* fout = fopen(filename, "wb");
+    fputc(counter + 1, fout);
+    fclose(fout);
+  } else {
+    fprintf(stderr, "counter file does not exist: %s\n", filename);
+    return 1;
   }
 
   return 0;
