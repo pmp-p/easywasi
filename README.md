@@ -8,7 +8,7 @@ Install into your bundled project with `npm i easywasi`. You can also use it on 
 
 ```html
 <script type="module">
-import WasiPreview1 from 'https://esm.sh/easywasi@0.0.2'
+import WasiPreview1 from 'https://esm.sh/easywasi'
 </script>
 ```
 
