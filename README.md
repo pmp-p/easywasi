@@ -17,7 +17,7 @@ And I like to use sourcemaps:
 <script type="importmap">
   {
     "imports": {
-      "easywasi": "https://esm.sh/easywasi@0.0.2",
+      "easywasi": "https://esm.sh/easywasi",
       "@zenfs/core": "https://esm.sh/@zenfs/core",
       "@zenfs/dom": "https://esm.sh/@zenfs/dom",
       "@zenfs/zip": "https://esm.sh/@zenfs/zip"
@@ -93,7 +93,7 @@ import {defs, WasiPreview1} from 'easywasi'
 class WasiPreview1WithSockets = {
   constructor(options={}) {
     super(options)
-    // do somehting with optiosn to setup socket
+    // do something with options to setup socket
   }
 
   // obviously implement these however
@@ -127,4 +127,4 @@ Have a look at [WasiPreview1](./docs/easywasi.js) to figure out how to implement
 
 - [this article](https://dev.to/ndesmic/building-a-minimal-wasi-polyfill-for-browsers-4nel) has some nice initial ideas
 - [this article](https://twdev.blog/2023/11/wasm_cpp_04/) has some good WASI imeplentations
-- [browser-wasi-shim](https://github.com/bjorn3/browser_wasi_shim) has a very nice interface, and this is basically the same, but using more extensible fs, and improving a few little things.
+- [browser-wasi-shim](https://github.com/bjorn3/browser_wasi_shim) has a very nice interface, and this is basically the same in JS, but using more extensible filesystem, and I improved a few little things.
