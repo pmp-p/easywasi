@@ -21,5 +21,9 @@
   ],
   "homepage": "https://konsumer.js.org/easywasi",
   "author": "David Konsumer <konsumer@jetboystudio.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "files": [
+    "docs/defs.js",
+    "docs/easywasi.js"
+  ]
 }
