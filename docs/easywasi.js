@@ -9,7 +9,7 @@ export class WASIProcExit extends Error {
   }
 }
 
-// FS interface that is used here. Implement your own, if you want!
+// FS interface that is used here. Implement your own, if you want, or use zenfs or node fs!
 export class FSDummy {
   appendFileSync (path, data, options = {}) {
     throw new Error('appendFileSync not implemented. This is a dummy fs.')
