@@ -176,13 +176,18 @@ export class WasiPreview1 {
     return fd
   }
 
-  // Standard output handling (for fdwrite)
+  // Standard input (for fd_read)
+  stdin () {
+    return new Uint8Array()
+  }
+
+  // Standard output handling (for fd_write)
   stdout (buffer) {
     const text = this.textDecoder.decode(buffer).replace(/\n$/g, '')
     if (text) console.log(text)
   }
 
-  // Standard error handling (for fdwrite)
+  // Standard error handling (for fd_write)
   stderr (buffer) {
     const text = this.textDecoder.decode(buffer).replace(/\n$/g, '')
     if (text) console.error(text)
@@ -368,8 +373,6 @@ export class WasiPreview1 {
   }
 
   fd_read (fd, iovs, iovsLen, nreadPtr) {
-    if (fd === 0) return defs.ERRNO_SPIPE // stdin not implemented
-
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
 
@@ -378,7 +381,12 @@ export class WasiPreview1 {
     const mem = new Uint8Array(this.wasm.memory.buffer)
 
     try {
-      const content = this.fs.readFileSync(fileDesc.handle.path)
+      let content
+      if (fd === 0) {
+        content = this.stdin()
+      } else {
+        content = this.fs.readFileSync(fileDesc.handle.path)
+      }
 
       for (let i = 0; i < iovsLen; i++) {
         const ptr = iovs + i * 8
