@@ -29,7 +29,6 @@ import { WasiPreview1 } from 'easywasi'
 import { configure, InMemory, fs } from '@zenfs/core'
 import { IndexedDB } from '@zenfs/dom'
 import { Zip } from '@zenfs/zip'
-
 </script>
 ```
 
