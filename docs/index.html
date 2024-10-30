@@ -1,24 +1,41 @@
 <head>
   <title>easywasi example</title>
   <style>
+    /* this is not realy needed, but make it look nicer */
+    body, html {
+      margin:0;
+      height: 90vh;
+    }
     body {
       font-family: sans-serif;
-      maring: 20px;
-      min-height: 90%;
       background: #000;
       color: #fff;
+      padding: 20px;
     }
     #stdio {
-      height: 200px;
+      height: 100%;
       display: flex;
       gap: 10px;
-      min-height: 90%;
     }
-    #stdio textarea {
+    textarea {
       flex-grow: 1;
       background: #000;
       color: #fff;
       padding: 10px;
+      height: 80%;
+    }
+    textarea::-webkit-scrollbar {
+      width: 1em;
+    }
+
+    textarea::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    }
+
+    textarea::-webkit-scrollbar-thumb {
+      background-color: darkgrey;
+      outline: 1px solid slategrey;
+      cursor: grab;
     }
   </style>
 </head>
@@ -61,9 +78,6 @@
       }
     })
 
-    // you can do stuff with filesystem here
-    // console.log(new TextDecoder().decode(fs.readFileSync('/mnt/zip/cyber.txt')))
-
     // write persistant counter file, if it does not exist
     if (!fs.existsSync('/home/counter')) {
       fs.writeFileSync('/home/counter', '\0')
@@ -81,18 +95,19 @@
       wasi_snapshot_preview1
     })
 
-    // Here I implement custom stdio. In yours you don't have to do this, and it will just log
-    function addText(t, text) {
-      t.value += text
+    // Here I implement custom stdio. In yours, you don't have to do this, and it will just log/warn
+    function addText(t, buffer) {
+      t.value += d.decode(buffer)
       t.selectionStart = t.selectionEnd = t.value.length
       t.blur()
       t.focus()
       t.blur()
     }
     const d = new TextDecoder()
-    wasi_snapshot_preview1.stdout = (buffer) => addText(document.getElementById('out'), d.decode(buffer))
-    wasi_snapshot_preview1.stderr = (buffer) => addText(document.getElementById('err'), d.decode(buffer))
+    wasi_snapshot_preview1.stdout = (buffer) => addText(document.getElementById('out'), buffer)
+    wasi_snapshot_preview1.stderr = (buffer) => addText(document.getElementById('err'), buffer)
 
+    // this sets up the memory & calls the wasm file's main()
     const exitCode = wasi_snapshot_preview1.start(instance.exports)
     console.log(`Test run: ${exitCode}`)
   </script>
