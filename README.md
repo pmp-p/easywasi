@@ -1,6 +1,6 @@
 # easywasi
 
-A working, zero-dependency implementation of WASI preview1, with lots of filesystem options. It will work in places other than a browser, but that is the primary target. It's easy, light, simple, effortless to modify/extend, and should work with any WASI-enabled wasm.
+A working, zero-dependency implementation of WASI preview1, with lots of filesystem options. It will work in places other than a browser, but that is the primary target. It's easy, light, simple, effortless to modify/extend, and should work with any WASI-enabled wasm and any modern js runtime.
 
 ## install
 
