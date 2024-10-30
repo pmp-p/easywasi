@@ -55,7 +55,7 @@ To really unlock it's power, though, give it an `fs` instance, like from [zen-fs
 Things to note:
 
 - `/` has the default in-memory backend.
-- `/mnt` is a bit special, and not traversed by file-lists, so if you want that, put it somewhere else
+- `/mnt` is a bit special in zenfs, and not traversed by a file-list, so if you want that, put it somewhere else
 
 ```js
 import WasiPreview1 from 'easywasi'
