@@ -1,108 +1,99 @@
 <head>
-    <title>easywasi example</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            maring: 20px;
-            min-height: 90%;
-            background: #000;
-            color: #fff;
-        }
-        #stdio {
-            height: 200px;
-            display: flex;
-            gap: 10px;
-            min-height: 90%;
-        }
-        #stdio textarea {
-            flex-grow: 1;
-            background: #000;
-            color: #fff;
-        }
-    </style>
+  <title>easywasi example</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      maring: 20px;
+      min-height: 90%;
+      background: #000;
+      color: #fff;
+    }
+    #stdio {
+      height: 200px;
+      display: flex;
+      gap: 10px;
+      min-height: 90%;
+    }
+    #stdio textarea {
+      flex-grow: 1;
+      background: #000;
+      color: #fff;
+      padding: 10px;
+    }
+  </style>
 </head>
 <body>
-    <script type="importmap">
-        {
-            "imports": {
-                "easywasi": "./easywasi.js",
-                "@zenfs/core": "https://esm.sh/@zenfs/core",
-                "@zenfs/dom": "https://esm.sh/@zenfs/dom",
-                "@zenfs/zip": "https://esm.sh/@zenfs/zip"
-            }
-        }
-    </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "easywasi": "./easywasi.js",
+        "@zenfs/core": "https://esm.sh/@zenfs/core",
+        "@zenfs/dom": "https://esm.sh/@zenfs/dom",
+        "@zenfs/zip": "https://esm.sh/@zenfs/zip"
+      }
+    }
+  </script>
 
-    <p>
-        This is an example page for
-        <a href="https://github.com/konsumer/easywasi/">easywasi</a>.
-    </p>
+  <p>
+    This is an example page for
+    <a href="https://github.com/konsumer/easywasi/">easywasi</a>.
+  </p>
 
-    <div id="stdio">
-        <textarea id="out"></textarea>
-        <textarea id="err"></textarea>
-    </div>
+  <div id="stdio">
+    <textarea id="out"></textarea>
+    <textarea id="err"></textarea>
+  </div>
 
-    <script type="module">
-        import { WasiPreview1 } from "easywasi";
-        import { configure, InMemory, fs } from "@zenfs/core";
-        import { IndexedDB } from "@zenfs/dom";
-        import { Zip } from "@zenfs/zip";
+  <script type="module">
+    import { WasiPreview1 } from 'easywasi'
+    import { configure, InMemory, fs } from '@zenfs/core'
+    import { IndexedDB } from '@zenfs/dom'
+    import { Zip } from '@zenfs/zip'
 
-        await configure({
-            mounts: {
-                "/zip": {
-                    backend: Zip,
-                    data: await fetch("example.zip").then((r) =>
-                        r.arrayBuffer(),
-                    ),
-                },
-                "/tmp": InMemory,
-                "/home": IndexedDB,
-            },
-        });
+    await configure({
+      mounts: {
+        '/zip': {
+          backend: Zip,
+          data: await fetch('example.zip').then((r) => r.arrayBuffer())
+        },
+        '/tmp': InMemory, // goes away on refresh
+        '/home': IndexedDB // lives between page-loads
+      }
+    })
 
-        // you can do stuff with filesystem here
-        // console.log(new TextDecoder().decode(fs.readFileSync('/mnt/zip/cyber.txt')))
+    // you can do stuff with filesystem here
+    // console.log(new TextDecoder().decode(fs.readFileSync('/mnt/zip/cyber.txt')))
 
-        // write persistant counter file, if it does not exist
-        if (!fs.existsSync("/home/counter")) {
-            fs.writeFileSync("/home/counter", "\0");
-        }
+    // write persistant counter file, if it does not exist
+    if (!fs.existsSync('/home/counter')) {
+      fs.writeFileSync('/home/counter', '\0')
+    }
 
-        const wasi_snapshot_preview1 = new WasiPreview1({
-            fs,
-            args: ["coolguy", "a", "b", "c"],
-            env: {
-                COOL: "yep",
-            },
-        });
+    const wasi_snapshot_preview1 = new WasiPreview1({
+      fs,
+      args: ['coolguy', 'a', 'b', 'c'],
+      env: {
+        COOL: 'yep'
+      }
+    })
 
-        const { instance } = await WebAssembly.instantiateStreaming(
-            fetch("example.wasm"),
-            {
-                wasi_snapshot_preview1,
-            },
-        );
+    const { instance } = await WebAssembly.instantiateStreaming(fetch('example.wasm'), {
+      wasi_snapshot_preview1
+    })
 
-        function addText(t, text) {
-            t.value += text;
-            t.selectionStart = t.selectionEnd = t.value.length;
-            t.blur();
-            t.focus();
-            t.blur();
-        }
+    // Here I implement custom stdio. In yours you don't have to do this, and it will just log
+    function addText(t, text) {
+      t.value += text
+      t.selectionStart = t.selectionEnd = t.value.length
+      t.blur()
+      t.focus()
+      t.blur()
+    }
+    const d = new TextDecoder()
+    wasi_snapshot_preview1.stdout = (buffer) => addText(document.getElementById('out'), d.decode(buffer))
+    wasi_snapshot_preview1.stderr = (buffer) => addText(document.getElementById('err'), d.decode(buffer))
 
-        // Here I implement custom stdio. In yours you don't have to do this, and it will just log
-        const d = new TextDecoder();
-        const out = document.getElementById("out");
-        const err = document.getElementById("err");
-        wasi_snapshot_preview1.stdout = (buffer) =>
-            addText(out, d.decode(buffer));
-        wasi_snapshot_preview1.stderr = (buffer) =>
-            addText(err, d.decode(buffer));
-
-        const exitCode = wasi_snapshot_preview1.start(instance.exports);
-        console.log(`Test run: ${exitCode}`);
-    </script>
+    const exitCode = wasi_snapshot_preview1.start(instance.exports)
+    console.log(`Test run: ${exitCode}`)
+  </script>
 </body>
