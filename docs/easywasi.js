@@ -718,9 +718,9 @@ export class WasiPreview1 {
   fd_filestat_get (fd, ptr) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
+    if (!fileDesc.handle) return defs.ERRNO_BADF
     const mem = new DataView(this.wasm.memory.buffer)
     const stats = this.fs.statSync(fileDesc.handle.path)
-    console.log(fileDesc.handle.path, stats.size, stats)
     mem.setBigUint64(ptr, BigInt(stats.dev), true);
     mem.setBigUint64(ptr + 8, BigInt(stats.ino), true);
     mem.setUint8(ptr + 16, stats.filetype);
