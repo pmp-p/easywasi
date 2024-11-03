@@ -120,6 +120,7 @@ export class WasiPreview1 {
     this.fd_advise = this.fd_advise.bind(this)
     this.fd_allocate = this.fd_allocate.bind(this)
     this.fd_datasync = this.fd_datasync.bind(this)
+    this.fd_filestat_get = this.fd_filestat_get.bind(this)
     this.fd_filestat_set_size = this.fd_filestat_set_size.bind(this)
     this.fd_filestat_set_times = this.fd_filestat_set_times.bind(this)
     this.fd_pread = this.fd_pread.bind(this)
@@ -714,6 +715,23 @@ export class WasiPreview1 {
     }
   }
 
+  fd_filestat_get (fd, ptr) {
+    const fileDesc = this.fds.get(fd)
+    if (!fileDesc) return defs.ERRNO_BADF
+    const mem = new DataView(this.wasm.memory.buffer)
+    const stats = this.fs.statSync(fileDesc.handle.path)
+    console.log(fileDesc.handle.path, stats.size, stats)
+    mem.setBigUint64(ptr, BigInt(stats.dev), true);
+    mem.setBigUint64(ptr + 8, BigInt(stats.ino), true);
+    mem.setUint8(ptr + 16, stats.filetype);
+    mem.setBigUint64(ptr + 24, BigInt(stats.nlink), true);
+    mem.setBigUint64(ptr + 32, BigInt(stats.size), true);
+    mem.setBigUint64(ptr + 38, BigInt(stats.atime), true);
+    mem.setBigUint64(ptr + 46, BigInt(stats.mtime), true);
+    mem.setBigUint64(ptr + 52, BigInt(stats.ctime), true);
+    return defs.ERRNO_SUCCESS
+  }
+  
   fd_filestat_set_size (fd, size) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
