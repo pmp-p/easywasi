@@ -2,6 +2,8 @@
 
 A working, zero-dependency implementation of WASI preview1, with lots of filesystem options. It will work in places other than a browser, but that is the primary target. It's easy, light, simple, effortless to modify/extend, and should work with any WASI-enabled wasm and any modern js runtime.
 
+If you need framebuffer/audio/input WASI devices, check ut [web-zen-dev](https://github.com/konsumer/web-zen-dev).
+
 ## install
 
 Install into your bundled project with `npm i easywasi`. You can also use it on the web, directly from cdn:
