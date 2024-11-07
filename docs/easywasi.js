@@ -78,13 +78,10 @@ export class FSDummy {
 
 export class WasiPreview1 {
   constructor (options = {}) {
-    this.args = options.args || []
-    this.env = options.env || {}
-    this.fs = options.fs || new FSDummy()
-
-    if (!this.fs) {
-      throw new Error('File system implementation required')
-    }
+    this.args = options?.args || []
+    this.env = options?.env || {}
+    this.fs = options?.fs || new FSDummy()
+    this.debug = !!options?.debug
 
     // Initialize file descriptors with stdin(0), stdout(1), stderr(2), /
     // fd is first number
@@ -100,50 +97,65 @@ export class WasiPreview1 {
     this.textEncoder = new TextEncoder()
 
     // Bind all WASI functions to maintain correct 'this' context
-    this.args_get = this.args_get.bind(this)
-    this.args_sizes_get = this.args_sizes_get.bind(this)
-    this.environ_get = this.environ_get.bind(this)
-    this.environ_sizes_get = this.environ_sizes_get.bind(this)
-    this.clock_res_get = this.clock_res_get.bind(this)
-    this.clock_time_get = this.clock_time_get.bind(this)
-    this.fd_close = this.fd_close.bind(this)
-    this.fd_seek = this.fd_seek.bind(this)
-    this.fd_write = this.fd_write.bind(this)
-    this.fd_read = this.fd_read.bind(this)
-    this.fd_fdstat_get = this.fd_fdstat_get.bind(this)
-    this.fd_fdstat_set_flags = this.fd_fdstat_set_flags.bind(this)
-    this.fd_prestat_get = this.fd_prestat_get.bind(this)
-    this.fd_prestat_dir_name = this.fd_prestat_dir_name.bind(this)
-    this.path_open = this.path_open.bind(this)
-    this.path_filestat_get = this.path_filestat_get.bind(this)
-    this.proc_exit = this.proc_exit.bind(this)
-    this.fd_advise = this.fd_advise.bind(this)
-    this.fd_allocate = this.fd_allocate.bind(this)
-    this.fd_datasync = this.fd_datasync.bind(this)
-    this.fd_filestat_get = this.fd_filestat_get.bind(this)
-    this.fd_filestat_set_size = this.fd_filestat_set_size.bind(this)
-    this.fd_filestat_set_times = this.fd_filestat_set_times.bind(this)
-    this.fd_pread = this.fd_pread.bind(this)
-    this.fd_pwrite = this.fd_pwrite.bind(this)
-    this.fd_readdir = this.fd_readdir.bind(this)
-    this.fd_renumber = this.fd_renumber.bind(this)
-    this.fd_sync = this.fd_sync.bind(this)
-    this.fd_tell = this.fd_tell.bind(this)
-    this.path_create_directory = this.path_create_directory.bind(this)
-    this.path_filestat_set_times = this.path_filestat_set_times.bind(this)
-    this.path_link = this.path_link.bind(this)
-    this.path_readlink = this.path_readlink.bind(this)
-    this.path_remove_directory = this.path_remove_directory.bind(this)
-    this.path_rename = this.path_rename.bind(this)
-    this.path_symlink = this.path_symlink.bind(this)
-    this.path_unlink_file = this.path_unlink_file.bind(this)
-    this.poll_oneoff = this.poll_oneoff.bind(this)
-    this.sock_accept = this.sock_accept.bind(this)
-    this.sock_recv = this.sock_recv.bind(this)
-    this.sock_send = this.sock_send.bind(this)
-    this.sock_shutdown = this.sock_shutdown.bind(this)
-    this.random_get = this.random_get.bind(this)
-    this.sched_yield = this.sched_yield.bind(this)
+    const doBind = (...names) => {
+      for (const name of names) {
+        if (this.debug) {
+          const orig = this[name].bind(this)
+          this[name] = (...a) => {
+            console.log(name, a)
+            return orig(...a)
+          }
+        } else {
+          this[name] = this[name].bind(this)
+        }
+      }
+    }
+    doBind(
+      'args_get',
+      'args_sizes_get',
+      'environ_get',
+      'environ_sizes_get',
+      'clock_res_get',
+      'clock_time_get',
+      'fd_close',
+      'fd_seek',
+      'fd_write',
+      'fd_read',
+      'fd_fdstat_get',
+      'fd_fdstat_set_flags',
+      'fd_filestat_get',
+      'fd_prestat_get',
+      'fd_prestat_dir_name',
+      'path_open',
+      'path_filestat_get',
+      'proc_exit',
+      'fd_advise',
+      'fd_allocate',
+      'fd_datasync',
+      'fd_filestat_set_size',
+      'fd_filestat_set_times',
+      'fd_pread',
+      'fd_pwrite',
+      'fd_readdir',
+      'fd_renumber',
+      'fd_sync',
+      'fd_tell',
+      'path_create_directory',
+      'path_filestat_set_times',
+      'path_link',
+      'path_readlink',
+      'path_remove_directory',
+      'path_rename',
+      'path_symlink',
+      'path_unlink_file',
+      'poll_oneoff',
+      'sock_accept',
+      'sock_recv',
+      'sock_send',
+      'sock_shutdown',
+      'random_get',
+      'sched_yield'
+    )
   }
 
   // Helper methods
@@ -260,6 +272,84 @@ export class WasiPreview1 {
     view.setBigUint64(resPtr, resolution, true)
     return defs.ERRNO_SUCCESS
   }
+
+  fd_filestat_get(fd, filestatPtr) {
+  const fileDesc = this.fds.get(fd)
+  if (!fileDesc) return defs.ERRNO_BADF
+
+  try {
+    let stats
+    if (fileDesc.type === 'stdio') {
+      // For stdio, return minimal stats
+      stats = {
+        dev: 0n,
+        ino: 0n,
+        filetype: defs.FILETYPE_CHARACTER_DEVICE,
+        nlink: 1n,
+        size: 0n,
+        atim: 0n,
+        mtim: 0n,
+        ctim: 0n
+      }
+    } else if (fileDesc.type === 'file' || fileDesc.type === 'directory') {
+      // Get actual file stats
+      const fsStats = this.fs.statSync(fileDesc.handle.path)
+      
+      // Determine file type
+      let filetype = defs.FILETYPE_UNKNOWN
+      if (fsStats.isFile()) filetype = defs.FILETYPE_REGULAR_FILE
+      else if (fsStats.isDirectory()) filetype = defs.FILETYPE_DIRECTORY
+      else if (fsStats.isSymbolicLink()) filetype = defs.FILETYPE_SYMBOLIC_LINK
+      else if (fsStats.isCharacterDevice()) filetype = defs.FILETYPE_CHARACTER_DEVICE
+      else if (fsStats.isBlockDevice()) filetype = defs.FILETYPE_BLOCK_DEVICE
+      else if (fsStats.isFIFO()) filetype = defs.FILETYPE_SOCKET_STREAM
+
+      stats = {
+        dev: BigInt(fsStats.dev || 0),
+        ino: BigInt(fsStats.ino || 0),
+        filetype,
+        nlink: BigInt(fsStats.nlink || 1),
+        size: BigInt(fsStats.size || 0),
+        atim: BigInt(fsStats.atimeMs * 1_000_000), // Convert to nanoseconds
+        mtim: BigInt(fsStats.mtimeMs * 1_000_000),
+        ctim: BigInt(fsStats.ctimeMs * 1_000_000)
+      }
+    } else {
+      return defs.ERRNO_BADF
+    }
+
+    // Write filestat struct to memory
+    const view = new DataView(this.wasm.memory.buffer)
+    
+    // device ID - u64
+    view.setBigUint64(filestatPtr, stats.dev, true)
+    
+    // inode - u64
+    view.setBigUint64(filestatPtr + 8, stats.ino, true)
+    
+    // filetype - u8
+    view.setUint8(filestatPtr + 16, stats.filetype)
+    
+    // nlink - u64
+    view.setBigUint64(filestatPtr + 24, stats.nlink, true)
+    
+    // size - u64
+    view.setBigUint64(filestatPtr + 32, stats.size, true)
+    
+    // atime - u64
+    view.setBigUint64(filestatPtr + 40, stats.atim, true)
+    
+    // mtime - u64
+    view.setBigUint64(filestatPtr + 48, stats.mtim, true)
+    
+    // ctime - u64
+    view.setBigUint64(filestatPtr + 56, stats.ctim, true)
+
+    return defs.ERRNO_SUCCESS
+  } catch (e) {
+    return defs.ERRNO_IO
+  }
+}
 
   clock_time_get (id, precision, timePtr) {
     const view = new DataView(this.wasm.memory.buffer)
@@ -715,23 +805,6 @@ export class WasiPreview1 {
     }
   }
 
-  fd_filestat_get (fd, ptr) {
-    const fileDesc = this.fds.get(fd)
-    if (!fileDesc) return defs.ERRNO_BADF
-    if (!fileDesc.handle) return defs.ERRNO_BADF
-    const mem = new DataView(this.wasm.memory.buffer)
-    const stats = this.fs.statSync(fileDesc.handle.path)
-    mem.setBigUint64(ptr, BigInt(stats.dev), true);
-    mem.setBigUint64(ptr + 8, BigInt(stats.ino), true);
-    mem.setUint8(ptr + 16, stats.filetype);
-    mem.setBigUint64(ptr + 24, BigInt(stats.nlink), true);
-    mem.setBigUint64(ptr + 32, BigInt(stats.size), true);
-    mem.setBigUint64(ptr + 38, BigInt(stats.atime), true);
-    mem.setBigUint64(ptr + 46, BigInt(stats.mtime), true);
-    mem.setBigUint64(ptr + 52, BigInt(stats.ctime), true);
-    return defs.ERRNO_SUCCESS
-  }
-  
   fd_filestat_set_size (fd, size) {
     const fileDesc = this.fds.get(fd)
     if (!fileDesc) return defs.ERRNO_BADF
