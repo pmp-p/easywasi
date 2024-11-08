@@ -57,6 +57,7 @@ wasi_snapshot_preview1.fd_filestat_get = () => {}
 
 wasi_snapshot_preview1.stdout = b => xterm.write(b)
 wasi_snapshot_preview1.stderr = b => xterm.write(b)
+wasi_snapshot_preview1.stdin = () => {}
 
 const bytes = await fs.promises.readFile('/zip/rustpython.wasm')
 const { instance } = await WebAssembly.instantiate(bytes, {
