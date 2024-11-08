@@ -274,82 +274,82 @@ export class WasiPreview1 {
   }
 
   fd_filestat_get(fd, filestatPtr) {
-  const fileDesc = this.fds.get(fd)
-  if (!fileDesc) return defs.ERRNO_BADF
+    const fileDesc = this.fds.get(fd)
+    if (!fileDesc) return defs.ERRNO_BADF
 
-  try {
-    let stats
-    if (fileDesc.type === 'stdio') {
-      // For stdio, return minimal stats
-      stats = {
-        dev: 0n,
-        ino: 0n,
-        filetype: defs.FILETYPE_CHARACTER_DEVICE,
-        nlink: 1n,
-        size: 0n,
-        atim: 0n,
-        mtim: 0n,
-        ctim: 0n
+    try {
+      let stats
+      if (fileDesc.type === 'stdio') {
+        // For stdio, return minimal stats
+        stats = {
+          dev: 0n,
+          ino: 0n,
+          filetype: defs.FILETYPE_CHARACTER_DEVICE,
+          nlink: 1n,
+          size: 0n,
+          atim: 0n,
+          mtim: 0n,
+          ctim: 0n
+        }
+      } else if (fileDesc.type === 'file' || fileDesc.type === 'directory') {
+        // Get actual file stats
+        const fsStats = this.fs.statSync(fileDesc.handle.path)
+        
+        // Determine file type
+        let filetype = defs.FILETYPE_UNKNOWN
+        if (fsStats.isFile()) filetype = defs.FILETYPE_REGULAR_FILE
+        else if (fsStats.isDirectory()) filetype = defs.FILETYPE_DIRECTORY
+        else if (fsStats.isSymbolicLink()) filetype = defs.FILETYPE_SYMBOLIC_LINK
+        else if (fsStats.isCharacterDevice()) filetype = defs.FILETYPE_CHARACTER_DEVICE
+        else if (fsStats.isBlockDevice()) filetype = defs.FILETYPE_BLOCK_DEVICE
+        else if (fsStats.isFIFO()) filetype = defs.FILETYPE_SOCKET_STREAM
+
+        stats = {
+          dev: BigInt(fsStats.dev || 0),
+          ino: BigInt(fsStats.ino || 0),
+          filetype,
+          nlink: BigInt(fsStats.nlink || 1),
+          size: BigInt(fsStats.size || 0),
+          atim: BigInt(fsStats.atimeMs * 1_000_000), // Convert to nanoseconds
+          mtim: BigInt(fsStats.mtimeMs * 1_000_000),
+          ctim: BigInt(fsStats.ctimeMs * 1_000_000)
+        }
+      } else {
+        return defs.ERRNO_BADF
       }
-    } else if (fileDesc.type === 'file' || fileDesc.type === 'directory') {
-      // Get actual file stats
-      const fsStats = this.fs.statSync(fileDesc.handle.path)
+
+      // Write filestat struct to memory
+      const view = new DataView(this.wasm.memory.buffer)
       
-      // Determine file type
-      let filetype = defs.FILETYPE_UNKNOWN
-      if (fsStats.isFile()) filetype = defs.FILETYPE_REGULAR_FILE
-      else if (fsStats.isDirectory()) filetype = defs.FILETYPE_DIRECTORY
-      else if (fsStats.isSymbolicLink()) filetype = defs.FILETYPE_SYMBOLIC_LINK
-      else if (fsStats.isCharacterDevice()) filetype = defs.FILETYPE_CHARACTER_DEVICE
-      else if (fsStats.isBlockDevice()) filetype = defs.FILETYPE_BLOCK_DEVICE
-      else if (fsStats.isFIFO()) filetype = defs.FILETYPE_SOCKET_STREAM
+      // device ID - u64
+      view.setBigUint64(filestatPtr, stats.dev, true)
+      
+      // inode - u64
+      view.setBigUint64(filestatPtr + 8, stats.ino, true)
+      
+      // filetype - u8
+      view.setUint8(filestatPtr + 16, stats.filetype)
+      
+      // nlink - u64
+      view.setBigUint64(filestatPtr + 24, stats.nlink, true)
+      
+      // size - u64
+      view.setBigUint64(filestatPtr + 32, stats.size, true)
+      
+      // atime - u64
+      view.setBigUint64(filestatPtr + 40, stats.atim, true)
+      
+      // mtime - u64
+      view.setBigUint64(filestatPtr + 48, stats.mtim, true)
+      
+      // ctime - u64
+      view.setBigUint64(filestatPtr + 56, stats.ctim, true)
 
-      stats = {
-        dev: BigInt(fsStats.dev || 0),
-        ino: BigInt(fsStats.ino || 0),
-        filetype,
-        nlink: BigInt(fsStats.nlink || 1),
-        size: BigInt(fsStats.size || 0),
-        atim: BigInt(fsStats.atimeMs * 1_000_000), // Convert to nanoseconds
-        mtim: BigInt(fsStats.mtimeMs * 1_000_000),
-        ctim: BigInt(fsStats.ctimeMs * 1_000_000)
-      }
-    } else {
-      return defs.ERRNO_BADF
+      return defs.ERRNO_SUCCESS
+    } catch (e) {
+      return defs.ERRNO_IO
     }
-
-    // Write filestat struct to memory
-    const view = new DataView(this.wasm.memory.buffer)
-    
-    // device ID - u64
-    view.setBigUint64(filestatPtr, stats.dev, true)
-    
-    // inode - u64
-    view.setBigUint64(filestatPtr + 8, stats.ino, true)
-    
-    // filetype - u8
-    view.setUint8(filestatPtr + 16, stats.filetype)
-    
-    // nlink - u64
-    view.setBigUint64(filestatPtr + 24, stats.nlink, true)
-    
-    // size - u64
-    view.setBigUint64(filestatPtr + 32, stats.size, true)
-    
-    // atime - u64
-    view.setBigUint64(filestatPtr + 40, stats.atim, true)
-    
-    // mtime - u64
-    view.setBigUint64(filestatPtr + 48, stats.mtim, true)
-    
-    // ctime - u64
-    view.setBigUint64(filestatPtr + 56, stats.ctim, true)
-
-    return defs.ERRNO_SUCCESS
-  } catch (e) {
-    return defs.ERRNO_IO
   }
-}
 
   clock_time_get (id, precision, timePtr) {
     const view = new DataView(this.wasm.memory.buffer)
