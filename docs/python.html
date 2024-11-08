@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>python</title>
+    <link rel="stylesheet" href="https://esm.sh/@xterm/xterm/css/xterm.css" />
+    <script type="importmap">
+    {
+      "imports": {
+        "easywasi": "./easywasi.js",
+        "@zenfs/core": "https://esm.sh/@zenfs/core",
+        "@zenfs/dom": "https://esm.sh/@zenfs/dom",
+        "@zenfs/zip": "https://esm.sh/@zenfs/zip",
+        "@xterm/xterm": "https://esm.sh/@xterm/xterm",
+        "@xterm/addon-webgl": "https://esm.sh/@xterm/addon-webgl",
+        "@xterm/addon-clipboard": "https://esm.sh/@xterm/addon-clipboard"
+      }
+    }
+    </script
+  </head>
+  <body>
+
+<div id="terminal"></div>
+
+<script type="module">
+import { WasiPreview1 } from 'easywasi'
+
+import { configure, InMemory, fs } from '@zenfs/core'
+import { IndexedDB } from '@zenfs/dom'
+import { Zip } from '@zenfs/zip'
+
+import { Terminal } from '@xterm/xterm'
+import { WebglAddon } from '@xterm/addon-webgl'
+import { ClipboardAddon } from '@xterm/addon-clipboard'
+
+
+const xterm = new Terminal({
+  cursorBlink: true
+})
+xterm.loadAddon(new WebglAddon())
+xterm.loadAddon(new ClipboardAddon())
+xterm.open(document.getElementById('terminal'))
+
+xterm.onData(data => console.log(data))
+
+await configure({
+  mounts: {
+    '/zip': {
+      backend: Zip,
+      data: await fetch('rustpython.zip').then((r) => r.arrayBuffer())
+    },
+    '/tmp': InMemory, // goes away on refresh
+    '/home': IndexedDB // lives between page-loads
+  }
+})
+
+const wasi_snapshot_preview1 = new WasiPreview1({ fs, args: [], env: {PYTHONPATH: ''}})
+wasi_snapshot_preview1.fd_filestat_get = () => {}
+
+wasi_snapshot_preview1.stdout = b => xterm.write(b)
+wasi_snapshot_preview1.stderr = b => xterm.write(b)
+
+const bytes = await fs.promises.readFile('/zip/rustpython.wasm')
+const { instance } = await WebAssembly.instantiate(bytes, {
+  wasi_snapshot_preview1
+})
+const exitCode = wasi_snapshot_preview1.start(instance.exports)
+
+</script>
+
+</html>
+
+
