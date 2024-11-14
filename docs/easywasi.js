@@ -451,8 +451,10 @@ export class WasiPreview1 {
       this.stderr(buffer)
     } else {
       const fileDesc = this.fds.get(fd)
-      if (!fileDesc) return defs.ERRNO_BADF
-
+      if (!fileDesc) {
+        return defs.ERRNO_BADF
+      }
+      fileDesc.handle.position += written
       try {
         // Write using ZenFS path-based API
         this.fs.writeFileSync(fileDesc.handle.path, buffer)
