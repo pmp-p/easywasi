@@ -384,34 +384,36 @@ export class WasiPreview1 {
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type === 'stdio') return defs.ERRNO_SPIPE
 
+    var stats = null
+    let newPosition = 0
+    let noffset = Number(offset)
+
     try {
-      const stats = this.fs.statSync(fileDesc.handle.path)
-      const size = stats.size
-      let newPosition
-
-      switch (whence) {
-        case defs.WHENCE_SET:
-          newPosition = offset
-          break
-        case defs.WHENCE_CUR:
-          newPosition = fileDesc.handle.position + offset
-          break
-        case defs.WHENCE_END:
-          newPosition = size + offset
-          break
-        default:
-          return defs.ERRNO_INVAL
-      }
-
-      // Update position
-      fileDesc.handle.position = newPosition
-
-      const view = new DataView(this.wasm.memory.buffer)
-      view.setBigUint64(newOffsetPtr, BigInt(newPosition), true)
-      return defs.ERRNO_SUCCESS
+      stats = this.fs.statSync(fileDesc.handle.path)
     } catch (e) {
       return defs.ERRNO_IO
     }
+
+    switch (whence) {
+      case defs.WHENCE_SET:
+          newPosition = noffset
+          break
+      case defs.WHENCE_CUR:
+          newPosition = Number(fileDesc.handle.position) + noffset
+          break
+      case defs.WHENCE_END:
+          newPosition = Number(stats.size) + noffset
+          break
+      default:
+          return defs.ERRNO_INVAL
+    }
+
+    // Update position
+    fileDesc.handle.position = newPosition
+
+    const view = new DataView(this.wasm.memory.buffer)
+    view.setBigUint64(newOffsetPtr, BigInt(newPosition), true)
+    return defs.ERRNO_SUCCESS
   }
 
   fd_write (fd, iovs, iovsLen, nwrittenPtr) {
