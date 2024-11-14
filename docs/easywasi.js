@@ -384,9 +384,9 @@ export class WasiPreview1 {
     if (!fileDesc) return defs.ERRNO_BADF
     if (fileDesc.type === 'stdio') return defs.ERRNO_SPIPE
 
-    var stats = null
+    let stats = null
     let newPosition = 0
-    let noffset = Number(offset)
+    const noffset = Number(offset)
 
     try {
       stats = this.fs.statSync(fileDesc.handle.path)
